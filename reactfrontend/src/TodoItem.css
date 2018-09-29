@@ -1,0 +1,10 @@
+.todo-item {
+    display:flex;
+    width:100%;
+    justify-content:space-between;
+    font-size:1.8rem;
+}
+
+.todo-item span:hover {
+    color:red;
+}

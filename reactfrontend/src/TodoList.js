@@ -1,8 +1,9 @@
 import React, {Component} from  'react';
 import TodoItem from './TodoItem.js';
 import TodoForm from './TodoForm.js';
+import * as apiCalls from './api'; 
 
-const APIURL = '/api/todos/';
+import './TodoList.css';
 
 class TodoList extends  Component {
     constructor(props) {
@@ -20,102 +21,24 @@ class TodoList extends  Component {
         this.loadTodos();
     }
     
-    loadTodos(){
-        fetch(APIURL)
-        .then(resp => {
-            if(!resp.ok) {
-                if(resp.status >= 400 && resp.status < 500) {
-                    return resp.json().then(data =>{
-                        let err = {errorMessgge: data.message};
-                        throw err;                  
-                    })
-                } else {
-                    let err = {errorMessgge: 'Please try back later'}
-                    throw err; 
-                }
-            }
-            return resp.json();
-        }).then(todos => this.setState({todos})) 
+    async loadTodos(){
+        let todos = await apiCalls.getTodos();
+        this.setState({todos});
     }
     
-    addTodo(val){
-        fetch(APIURL, {
-            method: 'post',
-            headers: new Headers({
-                'Content-Type': 'application/json',
-            }),
-            body: JSON.stringify({name: val})
-        })
-        .then(resp => {
-            if(!resp.ok) {
-                if(resp.status >= 400 && resp.status < 500) {
-                    return resp.json().then(data =>{
-                        let err = {errorMessgge: data.message};
-                        throw err;                  
-                    })
-                } else {
-                    let err = {errorMessgge: 'Please try back later'}
-                    throw err; 
-                }
-            }
-            return resp.json();
-        }).then(newTodo => {
-            console.log('the value from todolist ', newTodo);
-            this.setState({todos: [...this.state.todos, newTodo]});     
-        });
+    async addTodo(val){
+       let newTodo = await apiCalls.createTodo(val);
+       this.setState({todos: [...this.state.todos, newTodo]});     
     }
     
-    deleteTodo(id) {
-        const deleteURL = APIURL + id;
-        fetch(deleteURL, {
-            method: 'delete'
-        })
-        .then(resp => {
-            if(!resp.ok) {
-                if(resp.status >= 400 && resp.status < 500) {
-                    return resp.json().then(data =>{
-                        let err = {errorMessgge: data.message};
-                        throw err;                  
-                    })
-                } else {
-                    let err = {errorMessgge: 'Please try back later'}
-                    throw err; 
-                }
-            }
-            //since it's a delete request, there shouldn't be a todo to response with
-            return resp.json();
-        }).then(() => {
-            const todos = this.state.todos.filter(t => t._id !== id);
-            this.setState({todos: todos});     
-        });        
-        
+    async deleteTodo(id) {
+        await apiCalls.removeTodo(id);
+        const todos = this.state.todos.filter(t => t._id !== id);
+        this.setState({todos: todos});
     }
     
-    toggleTodo(t){
-        console.log(t._id, t.completed)
-        const updateURL = APIURL + t._id;
-        fetch(updateURL, {
-            method: 'put',
-            headers: new Headers({
-                'Content-Type': 'application/json',
-            }),
-            body: JSON.stringify({completed: !t.completed})
-        })
-        .then(resp => {
-            if(!resp.ok) {
-                if(resp.status >= 400 && resp.status < 500) {
-                    return resp.json().then(data =>{
-                        let err = {errorMessgge: data.message};
-                        throw err;                  
-                    })
-                } else {
-                    let err = {errorMessgge: 'Please try back later'}
-                    throw err; 
-                }
-            }
-            //since it's a delete request, there shouldn't be a todo to response with
-            return resp.json();
-        }).then(updatedTodo => {
+    async toggleTodo(t){
+        let updatedTodo = await apiCalls.updateTodo(t);
             //map through IDs, if the current todo id is === to our updatedTodo, flip the completed status
             // otherwise keep it the same.
             const todos = this.state.todos.map(t => 
@@ -123,8 +46,7 @@ class TodoList extends  Component {
             ? {...t, completed: !t.completed}
             : t
             )
-            this.setState({todos: todos});     
-        });   
+            this.setState({todos: todos});
     }
     
     render() {
@@ -138,10 +60,12 @@ class TodoList extends  Component {
             />
         ));
         return (
-            <div>
-                <h1>Todo List</h1>
+            <div className="container">
+                <h1>todo<strong>List</strong></h1>
+                <h3 className="subtext">A todo list app built with React and the MERN stack</h3>
+                <h4 className="subtext">Created by <a href="http://www.michaelclaus.io" target="_blank" rel="noopener noreferrer">Michael Claus</a>.</h4>
                 <TodoForm addTodo={this.addTodo}/>
-                <ul>
+                <ul className="todo-list">
                     {todos}            
                 </ul>
             </div>

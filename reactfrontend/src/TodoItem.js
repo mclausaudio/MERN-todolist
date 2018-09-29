@@ -1,7 +1,8 @@
 import React from  'react';
+import './TodoItem.css';
 
 const TodoItem = ({name, completed, onDelete, onToggle}) => (
-    <li>
+    <li className="todo-item">
         <span
             style={{
                 textDecoration: completed ? 'line-through' : 'none'
